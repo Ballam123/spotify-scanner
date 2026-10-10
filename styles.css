@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Hitsters-lignende QR-kode prototype til at åbne Spotify direkte fra en telefon."
+    />
+    <title>Spotify Hitsters QR</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.5.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">♪</span>
+          <div>
+            <p class="eyebrow">Spotify</p>
+            <h1>Hitsters QR</h1>
+          </div>
+        </div>
+      </header>
+
+      <main class="phone-screen">
+        <nav class="mode-switch" aria-label="Vælg visning">
+          <button class="tab-btn active" data-tab="host" type="button">Vært</button>
+          <button class="tab-btn" data-tab="player" type="button">Spiller</button>
+        </nav>
+
+        <section class="panel active" id="host-panel">
+          <div class="notice">
+            <strong>Prototype:</strong> QR-koden sender spilleren direkte til Spotify, så den kan åbne appen uden at vise den valgte sang på forudgående landing page.
+          </div>
+
+          <label for="track-input">Spotify link eller track-id</label>
+          <input
+            id="track-input"
+            type="text"
+            placeholder="https://open.spotify.com/track/… eller spotify:track:…"
+            value="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+          />
+
+          <div class="button-row">
+            <button id="generate-btn" class="primary" type="button">Generér QR-kode</button>
+            <button id="fill-demo-btn" class="secondary" type="button">Brug demo</button>
+          </div>
+
+          <div id="generated-link" class="generated-link hidden"></div>
+
+          <div class="qr-wrap">
+            <div id="qr-code" aria-live="polite"></div>
+          </div>
+
+          <div class="small-text">
+            <p>Tip: Hvis du vil administrere runder, kan du få én QR-kode pr. sang og skifte den senere.</p>
+          </div>
+        </section>
+
+        <section class="panel" id="player-panel">
+          <div class="notice warn">
+            Scan QR-koden for at åbne Spotify direkte på telefonen.
+          </div>
+
+          <div id="reader" aria-label="QR scanner"></div>
+
+          <div id="scanner-status" class="status-box">
+            Klar til at scanne
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

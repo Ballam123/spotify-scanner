@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Hitsters QR</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.5.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">♪</span>
+          <div>
+            <p class="eyebrow">Spotify</p>
+            <h1>Hitsters QR</h1>
+          </div>
+        </div>
+      </header>
+
+      <main class="phone-screen">
+        <nav class="mode-switch" aria-label="Vælg visning">
+          <button class="tab-btn active" data-tab="host" type="button">Vært</button>
+          <button class="tab-btn" data-tab="player" type="button">Spiller</button>
+        </nav>
+
+        <section class="panel active" id="host-panel">
+          <div class="notice">
+            <strong>Tip:</strong> QR-koden kan pege på en kort redirect-side, så spillerne ikke ser sangen før Spotify åbner.
+          </div>
+
+          <div class="field-group">
+            <label for="song-name">Sangtitel</label>
+            <input id="song-name" type="text" placeholder="Fx. Heartless" />
+          </div>
+
+          <div class="field-group">
+            <label for="track-input">Spotify link eller track-id</label>
+            <input id="track-input" type="text" placeholder="https://open.spotify.com/track/..." />
+          </div>
+
+          <div class="field-group">
+            <label for="preview-time">Spil tid</label>
+            <select id="preview-time">
+              <option value="10">10 sekunder</option>
+              <option value="15">15 sekunder</option>
+              <option value="20">20 sekunder</option>
+              <option value="30">30 sekunder</option>
+            </select>
+          </div>
+
+          <div class="button-row">
+            <button id="add-song-btn" class="primary" type="button">Tilføj sang</button>
+            <button id="use-demo-btn" class="secondary" type="button">Demo</button>
+          </div>
+
+          <div class="queue-panel">
+            <div class="queue-header">
+              <h2>Sangliste</h2>
+              <button id="next-song-btn" type="button" class="mini">Næste sang</button>
+            </div>
+            <ul id="song-list" class="song-list"></ul>
+          </div>
+
+          <div class="round-panel">
+            <p class="label">Aktiv runde</p>
+            <h3 id="active-track-name">Ingen sang valgt</h3>
+            <div id="countdown" class="countdown">00:00</div>
+            <div class="button-row compact">
+              <button id="generate-qr-btn" class="primary" type="button">Generér QR</button>
+              <button id="stop-round-btn" class="secondary" type="button">Stop runde</button>
+            </div>
+          </div>
+
+          <div id="generated-link" class="generated-link hidden"></div>
+          <div class="qr-wrap">
+            <div id="qr-code" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="player-panel">
+          <div class="notice warn">
+            Scan QR-koden for at åbne Spotify, så sangen kun spilles i den valgte tid.
+          </div>
+
+          <div id="reader" aria-label="QR scanner"></div>
+          <div id="scanner-status" class="status-box">
+            Klar til at scanne
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

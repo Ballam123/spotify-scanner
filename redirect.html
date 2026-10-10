@@ -1,318 +1,73 @@
-const demoSongs = [
-  { id: 1, title: "Heartless", url: "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC", seconds: 10 },
-  { id: 2, title: "Levitating", url: "https://open.spotify.com/track/39LLxExYz6ewL.AcK?si=0", seconds: 10 },
-  { id: 3, title: "Blinding Lights", url: "https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b", seconds: 10 }
-];
-
-const state = {
-  songs: loadSongs(),
-  currentIndex: 0,
-  activeSeconds: 10,
-  timerId: null,
-  qrUrl: "",
-};
-
-const tabs = document.querySelectorAll(".tab-btn");
-const hostPanel = document.getElementById("host-panel");
-const playerPanel = document.getElementById("player-panel");
-const songNameInput = document.getElementById("song-name");
-const trackInput = document.getElementById("track-input");
-const previewTimeSelect = document.getElementById("preview-time");
-const songList = document.getElementById("song-list");
-const activeTrackName = document.getElementById("active-track-name");
-const countdown = document.getElementById("countdown");
-const generatedLink = document.getElementById("generated-link");
-const scannerStatus = document.getElementById("scanner-status");
-const qrCodeContainer = document.getElementById("qr-code");
-
-function loadSongs() {
-  const raw = localStorage.getItem("spotify-hitsters-songs");
-  if (!raw) return [...demoSongs];
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? parsed : [...demoSongs];
-  } catch {
-    return [...demoSongs];
-  }
-}
-
-function saveSongs() {
-  localStorage.setItem("spotify-hitsters-songs", JSON.stringify(state.songs));
-}
-
-function switchTab(tabName) {
-  tabs.forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.tab === tabName);
-  });
-
-  hostPanel.classList.toggle("active", tabName === "host");
-  playerPanel.classList.toggle("active", tabName === "player");
-}
-
-tabs.forEach((tab) => {
-  tab.addEventListener("click", () => switchTab(tab.dataset.tab));
-});
-
-function formatSpotifyUrl(rawValue) {
-  const value = (rawValue || "").trim();
-  if (!value) return "";
-
-  if (value.startsWith("spotify:track:")) {
-    return `https://open.spotify.com/track/${value.replace("spotify:track:", "")}`;
-  }
-
-  if (value.includes("spotify.com/track/")) {
-    return value;
-  }
-
-  const trackMatch = value.match(/track[/:]([A-Za-z0-9]{10,})/i);
-  if (trackMatch && trackMatch[1]) {
-    return `https://open.spotify.com/track/${trackMatch[1]}`;
-  }
-
-  if (/^[A-Za-z0-9]{10,}$/.test(value)) {
-    return `https://open.spotify.com/track/${value}`;
-  }
-
-  return value;
-}
-
-function renderSongList() {
-  songList.innerHTML = "";
-
-  if (!state.songs.length) {
-    songList.innerHTML = '<li class="song-item"><div class="info"><strong>Ingen sange</strong></div></li>';
-    return;
-  }
-
-  state.songs.forEach((song, index) => {
-    const item = document.createElement("li");
-    item.className = "song-item";
-
-    const isActive = index === state.currentIndex;
-    item.innerHTML = `
-      <div class="info">
-        <strong>${isActive ? "▶ " : ""}${song.title}</strong>
-        <span class="meta">${song.seconds}s</span>
-      </div>
-      <div class="controls">
-        <button class="play-button" data-index="${index}" type="button">Vælg</button>
-        <button class="delete-button" data-index="${index}" type="button">Slet</button>
-      </div>
-    `;
-
-    songList.appendChild(item);
-  });
-
-  songList.querySelectorAll(".play-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.currentIndex = Number(button.dataset.index);
-      updateRound();
-      renderSongList();
-    });
-  });
-
-  songList.querySelectorAll(".delete-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const idx = Number(button.dataset.index);
-      state.songs.splice(idx, 1);
-      if (state.currentIndex >= state.songs.length) {
-        state.currentIndex = Math.max(0, state.songs.length - 1);
-      }
-      if (!state.songs.length) {
-        state.currentIndex = 0;
-      }
-      saveSongs();
-      renderSongList();
-      updateRound();
-    });
-  });
-}
-
-function updateRound() {
-  const song = state.songs[state.currentIndex];
-  if (!song) {
-    activeTrackName.textContent = "Ingen sang valgt";
-    countdown.textContent = "00:00";
-    return;
-  }
-
-  state.activeSeconds = Number(song.seconds) || 10;
-  activeTrackName.textContent = song.title;
-  countdown.textContent = formatSeconds(state.activeSeconds);
-}
-
-function addSong() {
-  const title = songNameInput.value.trim();
-  const url = formatSpotifyUrl(trackInput.value);
-  const seconds = Number(previewTimeSelect.value) || 10;
-
-  if (!title || !url) {
-    scannerStatus.textContent = "Skriv en titel og et gyldigt Spotify-link.";
-    return;
-  }
-
-  const song = { id: Date.now(), title, url, seconds };
-  state.songs.push(song);
-  state.currentIndex = state.songs.length - 1;
-  saveSongs();
-  renderSongList();
-  updateRound();
-  songNameInput.value = "";
-  trackInput.value = "";
-  previewTimeSelect.value = "10";
-  scannerStatus.textContent = `Tilføjet: ${title}`;
-}
-
-function formatSeconds(value) {
-  const total = Math.max(0, Number(value) || 0);
-  const minutes = String(Math.floor(total / 60)).padStart(2, "0");
-  const secs = String(total % 60).padStart(2, "0");
-  return `${minutes}:${secs}`;
-}
-
-function renderQr(url) {
-  if (!url) {
-    qrCodeContainer.innerHTML = "";
-    generatedLink.textContent = "";
-    generatedLink.classList.add("hidden");
-    return;
-  }
-
-  const qr = qrcode(0, "L");
-  qr.addData(url);
-  qr.make();
-  qrCodeContainer.innerHTML = qr.createImgTag(10, 10);
-
-  generatedLink.textContent = url;
-  generatedLink.classList.remove("hidden");
-}
-
-function generateQr() {
-  const song = state.songs[state.currentIndex];
-  if (!song) {
-    scannerStatus.textContent = "Tilføj først en sang.";
-    return;
-  }
-
-  const url = `redirect.html?url=${encodeURIComponent(song.url)}&seconds=${song.seconds || 10}`;
-  state.qrUrl = url;
-  renderQr(url);
-  generatedLink.textContent = url;
-  generatedLink.classList.remove("hidden");
-  scannerStatus.textContent = `QR-kode klar til: ${song.title}`;
-}
-
-function nextSong() {
-  if (!state.songs.length) {
-    scannerStatus.textContent = "Ingen sange i køen.";
-    return;
-  }
-
-  state.currentIndex = (state.currentIndex + 1) % state.songs.length;
-  updateRound();
-  renderSongList();
-  scannerStatus.textContent = `Næste sang: ${state.songs[state.currentIndex].title}`;
-}
-
-function stopRound() {
-  if (state.timerId) {
-    clearInterval(state.timerId);
-    state.timerId = null;
-  }
-
-  countdown.textContent = "00:00";
-  scannerStatus.textContent = "Runden stoppet.";
-}
-
-function startTimer() {
-  if (!state.songs.length) return;
-
-  if (state.timerId) clearInterval(state.timerId);
-
-  const song = state.songs[state.currentIndex];
-  const seconds = Number(song.seconds) || 10;
-
-  let remaining = seconds;
-  countdown.textContent = formatSeconds(remaining);
-
-  state.timerId = setInterval(() => {
-    remaining -= 1;
-    if (remaining <= 0) {
-      clearInterval(state.timerId);
-      state.timerId = null;
-      countdown.textContent = "00:00";
-      scannerStatus.textContent = `Tid udløbet for ${song.title}`;
-      return;
-    }
-    countdown.textContent = formatSeconds(remaining);
-  }, 1000);
-}
-
-document.getElementById("add-song-btn").addEventListener("click", () => {
-  addSong();
-});
-
-document.getElementById("use-demo-btn").addEventListener("click", () => {
-  const demo = demoSongs[0];
-  songNameInput.value = demo.title;
-  trackInput.value = demo.url;
-  previewTimeSelect.value = String(demo.seconds || 10);
-  addSong();
-});
-
-document.getElementById("generate-qr-btn").addEventListener("click", () => {
-  generateQr();
-  startTimer();
-});
-
-document.getElementById("next-song-btn").addEventListener("click", () => {
-  nextSong();
-  startTimer();
-});
-
-document.getElementById("stop-round-btn").addEventListener("click", () => {
-  stopRound();
-});
-
-function startScanner() {
-  const reader = document.getElementById("reader");
-  if (!reader) return;
-
-  const scanner = new Html5Qrcode("reader");
-
-  Html5Qrcode.getCameras()
-    .then((devices) => {
-      if (!devices || !devices.length) {
-        scannerStatus.textContent = "Ingen kamera fundet.";
-        return;
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Redirect</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
       }
 
-      const cameraId = devices[0].id;
-      scanner
-        .start(
-          cameraId,
-          { fps: 10, qrbox: { width: 260, height: 260 } },
-          (decodedText) => {
-            scannerStatus.textContent = `Scannet: ${decodedText}`;
-            window.location.href = decodedText;
-          },
-          () => {}
-        )
-        .catch((error) => {
-          scannerStatus.textContent = `Kamera kunne ikke startes: ${error}`;
-        });
-    })
-    .catch((error) => {
-      scannerStatus.textContent = `Kameraadgang fejlede: ${error}`;
-    });
-}
+      body {
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-family: Arial, sans-serif;
+      }
 
-window.addEventListener("DOMContentLoaded", () => {
-  renderSongList();
-  updateRound();
-  switchTab("host");
-  startScanner();
-});
+      .content {
+        display: grid;
+        place-items: center;
+        gap: 14px;
+      }
 
+      .loader {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top-color: #1db954;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .text {
+        color: rgba(255,255,255,0.7);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <div class="loader" aria-label="Indlæser Spotify"></div>
+      <div class="text" id="message">Åbner Spotify</div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const spotifyUrl = params.get("url");
+      const seconds = Number(params.get("seconds") || "10");
+
+      const message = document.getElementById("message");
+      message.textContent = `Spiller i ${seconds} sekunder`;
+
+      if (!spotifyUrl) {
+        window.location.replace(new URL("index.html", window.location.href).toString());
+      } else {
+        const resolvedUrl = new URL(spotifyUrl, window.location.href).toString();
+        setTimeout(() => {
+          window.location.replace(resolvedUrl);
+        }, 1200);
+      }
+    </script>
+  </body>
+</html>

@@ -32,13 +32,13 @@ body {
   padding: 24px;
 }
 
-button, input {
+button, input, select {
   font: inherit;
 }
 
 .app-shell {
   width: min(100%, 430px);
-  min-height: 820px;
+  min-height: 920px;
   border-radius: 28px;
   background: rgba(13, 17, 23, 0.88);
   border: 1px solid var(--line);
@@ -102,7 +102,6 @@ h1 {
   padding: 12px 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
 }
 
 .tab-btn.active {
@@ -136,6 +135,10 @@ h1 {
   color: #ffe3ab;
 }
 
+.field-group {
+  margin-bottom: 14px;
+}
+
 label {
   display: block;
   color: var(--muted);
@@ -143,7 +146,7 @@ label {
   margin-bottom: 8px;
 }
 
-input {
+input, select {
   width: 100%;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--line);
@@ -151,7 +154,6 @@ input {
   padding: 14px 14px;
   color: var(--text);
   font-size: 1rem;
-  margin-bottom: 14px;
 }
 
 input::placeholder {
@@ -164,10 +166,13 @@ input::placeholder {
   margin-bottom: 16px;
 }
 
+.button-row.compact {
+  margin-bottom: 0;
+}
+
 button.primary,
-button.secondary {
-  flex: 1;
-  padding: 13px 12px;
+button.secondary,
+button.mini {
   border-radius: 12px;
   border: none;
   cursor: pointer;
@@ -175,18 +180,123 @@ button.secondary {
 }
 
 button.primary {
+  flex: 1;
+  padding: 13px 12px;
   background: linear-gradient(135deg, var(--green), #31d771);
   color: #07130d;
 }
 
 button.secondary {
+  flex: 1;
+  padding: 13px 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--line);
   color: var(--text);
 }
 
+button.mini {
+  padding: 8px 10px;
+  background: rgba(29, 185, 84, 0.12);
+  border: 1px solid rgba(29, 185, 84, 0.35);
+  color: #d9ffe5;
+}
+
+.queue-panel,
+.round-panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+  margin-top: 16px;
+}
+
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.queue-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.song-item .info {
+  min-width: 0;
+}
+
+.song-item strong,
+.song-item span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.song-item .meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.song-item .controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.song-item button {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.round-panel .label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.round-panel h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.countdown {
+  margin: 16px 0;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  color: var(--green);
+}
+
 .generated-link {
-  margin-bottom: 14px;
+  margin-top: 14px;
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
@@ -214,7 +324,7 @@ button.secondary {
   display: grid;
   place-items: center;
   width: 100%;
-  max-width: 240px;
+  max-width: 260px;
 }
 
 #qr-code img {
@@ -222,13 +332,6 @@ button.secondary {
   height: auto;
   display: block;
   border-radius: 14px;
-}
-
-.small-text {
-  margin-top: 16px;
-  color: var(--muted);
-  line-height: 1.5;
-  font-size: 0.82rem;
 }
 
 #reader {
@@ -266,3 +369,4 @@ button.secondary {
     width: 100%;
   }
 }
+

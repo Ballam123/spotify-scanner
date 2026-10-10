@@ -1,147 +1,73 @@
-const demoTrackUrl = "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC";
-
-const hostPanel = document.getElementById("host-panel");
-const playerPanel = document.getElementById("player-panel");
-const tabs = document.querySelectorAll(".tab-btn");
-const trackInput = document.getElementById("track-input");
-const generateBtn = document.getElementById("generate-btn");
-const fillDemoBtn = document.getElementById("fill-demo-btn");
-const qrCodeContainer = document.getElementById("qr-code");
-const generatedLink = document.getElementById("generated-link");
-const scannerStatus = document.getElementById("scanner-status");
-
-function switchTab(tabName) {
-  tabs.forEach((tab) => {
-    const isActive = tab.dataset.tab === tabName;
-    tab.classList.toggle("active", isActive);
-  });
-
-  hostPanel.classList.toggle("active", tabName === "host");
-  playerPanel.classList.toggle("active", tabName === "player");
-}
-
-tabs.forEach((tab) => {
-  tab.addEventListener("click", () => switchTab(tab.dataset.tab));
-});
-
-function formatSpotifyUrl(rawValue) {
-  const value = rawValue.trim();
-
-  if (!value) {
-    return "";
-  }
-
-  const trackMatch = value.match(/(?:track[/:])([A-Za-z0-9]{10,})/i);
-  const spotifyId = value.match(/^[A-Za-z0-9]{10,}$/);
-
-  if (trackMatch && trackMatch[1]) {
-    return `https://open.spotify.com/track/${trackMatch[1]}`;
-  }
-
-  if (spotifyId && spotifyId[0]) {
-    return `https://open.spotify.com/track/${spotifyId[0]}`;
-  }
-
-  if (value.includes("spotify.com/track/")) {
-    return value;
-  }
-
-  if (value.startsWith("spotify:track:")) {
-    return `https://open.spotify.com/track/${value.replace("spotify:track:", "")}`;
-  }
-
-  return value;
-}
-
-function renderQrCode(url) {
-  if (!url) {
-    qrCodeContainer.innerHTML = "";
-    generatedLink.classList.add("hidden");
-    generatedLink.textContent = "";
-    return;
-  }
-
-  const qr = qrcode(0, "L");
-  qr.addData(url);
-  qr.make();
-  qrCodeContainer.innerHTML = qr.createImgTag(10, 10);
-
-  generatedLink.textContent = url;
-  generatedLink.classList.remove("hidden");
-}
-
-function generateTrackLink() {
-  const normalizedUrl = formatSpotifyUrl(trackInput.value);
-
-  if (!normalizedUrl) {
-    scannerStatus.textContent = "Indtast et Spotify-link først.";
-    return;
-  }
-
-  renderQrCode(normalizedUrl);
-  scannerStatus.textContent = `QR-kode er klar til: ${normalizedUrl}`;
-}
-
-generateBtn.addEventListener("click", generateTrackLink);
-fillDemoBtn.addEventListener("click", () => {
-  trackInput.value = demoTrackUrl;
-  generateTrackLink();
-});
-
-function startScanner() {
-  const reader = document.getElementById("reader");
-
-  if (!reader) {
-    return;
-  }
-
-  const scanner = new Html5Qrcode("reader");
-
-  Html5Qrcode.getCameras()
-    .then((devices) => {
-      if (!devices || devices.length === 0) {
-        scannerStatus.textContent = "Ingen kamera fundet. Tilslut telefonens kamera eller prøv igen.";
-        return;
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Redirect</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
       }
 
-      const cameraId = devices[0].id;
+      body {
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-family: Arial, sans-serif;
+      }
 
-      scanner
-        .start(
-          cameraId,
-          {
-            fps: 10,
-            qrbox: { width: 260, height: 260 },
-          },
-          (decodedText) => {
-            scannerStatus.textContent = `Scannet: ${decodedText}`;
-            const destination = formatSpotifyUrl(decodedText);
+      .content {
+        display: grid;
+        place-items: center;
+        gap: 14px;
+      }
 
-            if (destination) {
-              setTimeout(() => {
-                window.location.href = destination;
-              }, 500);
-            }
-          },
-          (errorMessage) => {
-            console.warn(errorMessage);
-          }
-        )
-        .catch((error) => {
-          scannerStatus.textContent = `Kamera kunne ikke starte: ${error}`;
-        });
-    })
-    .catch((error) => {
-      scannerStatus.textContent = `Kameraadgang fejlede: ${error}`;
-    });
-}
+      .loader {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top-color: #1db954;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
 
-window.addEventListener("DOMContentLoaded", () => {
-  renderQrCode(formatSpotifyUrl(trackInput.value));
-  switchTab("host");
-  startScanner();
-});
+      .text {
+        color: rgba(255,255,255,0.7);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
 
-window.addEventListener("load", () => {
-  generateTrackLink();
-});
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <div class="loader" aria-label="Indlæser Spotify"></div>
+      <div class="text" id="message">Åbner Spotify</div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const spotifyUrl = params.get("url");
+      const seconds = Number(params.get("seconds") || "10");
+
+      const message = document.getElementById("message");
+      message.textContent = `Spiller i ${seconds} sekunder`;
+
+      if (!spotifyUrl) {
+        window.location.replace("index.html");
+      } else {
+        setTimeout(() => {
+          window.location.replace(decodeURIComponent(spotifyUrl));
+        }, 1200);
+      }
+    </script>
+  </body>
+</html>
+
